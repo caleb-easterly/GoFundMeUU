@@ -1,2 +1,9 @@
 .Rhistory
 data/xmls
+data/
+data/*
+data-raw/*
+*.xlsx
+*.pyc
+*.dta
+*.csv

@@ -3,118 +3,139 @@
 from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
-from time import sleep
+import time
 import requests
 import re
+import os
+from is_in_us import is_in_us
 
-# mydf = pd.read_csv('GFM_url_list.csv', sep = '\t')
+# change directory
+os.chdir("C:\\Users\\caleb\\OneDrive - University of North Carolina at Chapel Hill\\Documents\\Projects\\Cancer care crowdfunding\\GoFundMeUU")
 
-# headers = ["Url", "Category","Position", "Title", "Location","Amount_Raised", "Goal", "Number_of_Donators", "Length_of_Fundraising", "FB_Shares", "GFM_hearts", "Text"]
-# mydf = mydf.reindex(columns = headers)
+urls = pd.read_csv('data/urls.txt', sep = '\t', header=None)
+urls.rename(columns={0: "URL"})
 
-# full_df = pd.DataFrame(columns = headers)
-#need to scrape a single url now
+np.random.seed(1247839)
+nsamp = 1000000
+ngood = 100000
+url_samp = urls.sample(nsamp).reset_index(drop=True)
 
+headers = ["URL", "Category", "Full_Scrape", "Position", "Title", "Location", "State", "IsUSA", "Amount_Raised", "Goal", "Number_of_Donators", "Length_of_Fundraising", "FB_Shares", "GFM_hearts", "Text"]
+scraped = url_samp.reindex(columns = headers)
+scraped["URL"] = url_samp
+def get_donation_amounts(soup):
+    donation_info_container = soup.find("div",{"class":"o-campaign-sidebar-progress-meter m-progress-meter"})
+    amounts = donation_info_container.findChild("h2", {"class": "m-progress-meter-heading"}).text
+    extract_amounts = re.match('(\$[\d,]*)\s*raised of ([\$[\d,]*)', amounts)
+    raised = re.sub("[$,]", "", extract_amounts.group(1))
+    goal = re.sub("[$,]", "", extract_amounts.group(2))
+    return raised, goal
 
-page = requests.get("https://www.gofundme.com/f/yeet-teat-fund-help-wives-beat-cancer-amp-dysphoria")
-soup = BeautifulSoup(page.text, 'lxml')
+# location - test case for later
+# test_url = "https://www.gofundme.com/f/k5fdzu-help-chris-breathe"
+# page = requests.get(test_url)
+# soup = BeautifulSoup(page.text, "lxml")
+# organizer = soup.find("div", {"class": "m-campaign-members-main-organizer"})
+# person = organizer.find("div", {"class": "m-person-info-content"}).findAll("div", recursive=False)
+# # always get last div for location
+# location = person[len(person) - 1].text
+# # remove comma and get state (or whatever is last word)
+# location_clean = re.sub('[\W_]', ' ', location)
+# state = location_clean.split().pop()
+# # state codes - s/o to https://gist.github.com/JeffPaine/3083347 
+# states = { 'AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA',
+#            'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME',
+#            'MI', 'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM',
+#            'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX',
+#            'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY'}
+# is_state_code = state in states
 
-# campaign description 
-container = soup.find("div", {"class": "o-campaign-description"})
+def get_location(soup):
+    organizer = soup.find("div", {"class": "m-campaign-members-main-organizer"})
+    person = organizer.find("div", {"class": "m-person-info-content"}).findAll("div", recursive=False)
 
-info_string = container.text
-print(info_string)
+    # always get last div for location
+    location = person[len(person) - 1].text
 
-# organizer
-org_name = soup.find("div", {"class": "m-campaign-members-main-organizer"})
+    # remove comma and get state (or whatever is last word)
+    location_clean = re.sub('[\W_]', ' ', location)
+    state = location_clean.split().pop()
+    us = is_in_us(state)
+    return location_clean, state, us
 
-# name
-print(org_name.findChildren("div", {"class": "m-person-info-name"})[0].text)
+startsc = time.time()
+ngot = 0
+for i in range(nsamp):
+    if ngot == ngood:
+        break
+    url = scraped.loc[i, "URL"]
+    print("Trying URL #" + str(i))
+    # request with max number of attempts
+    attempts = 0
+    maxattempt = 5
+    first_delay = 3
+    while attempts < maxattempt:
+        try:
+            page = requests.get(url)
+            # reset attempts
+            attempts = 0
+            break
+        except:
+            print("Error with url #" + str(i) + "on attempt #" + str(attempts))
+            attempts += 1
+            # exponential backoff
+            this_delay = first_delay**attempts
+            time.sleep(this_delay)
+    soup = BeautifulSoup(page.text, 'lxml')
+    # campaign type
+    try:
+        cat = soup.find("a", {"class": "flex-container align-center hrt-link hrt-link--gray-dark"}).text
+        scraped.loc[i, "Category"] = cat
+    except:
+        scraped.loc[i, "Category"] = ""
+    if cat != "Medical":
+        scraped.loc[i, "Full_Scrape"] = False
+        continue
+    else:
+        scraped.loc[i, "Full_Scrape"] = True
+        # campaign description 
+        try:
+            container = soup.find("div", {"class": "o-campaign-description"})
+            scraped.loc[i, "Text"] = container.text
+        except:
+            scraped.loc[i, "Text"] = ""
+        # location
+        # need organizer first
+        try:
+            location_clean, state, is_us = get_location(soup)
+            scraped.loc[i, "Location"] = location_clean
+            scraped.loc[i, "State"] = state
+            scraped.loc[i, "IsUSA"] = is_us
+        except:
+            scraped.loc[i, "Location"] = ""
+            scraped.loc[i, "State"] = ""
+            scraped.loc[i, "IsUSA"] = False
+        # amounts
+        try:
+            raised, goal = get_donation_amounts(soup)
+            scraped.loc[i, "Amount_Raised"] = raised
+            scraped.loc[i, "Goal"] = goal
+        except:
+            scraped.loc[i, "Amount_Raised"] = np.nan
+            scraped.loc[i, "Goal"] = np.nan
+        # campaign title
+        try: 
+            title_container = soup.find("h1",{"class":"mb0 a-campaign-title"})
+            scraped.loc[i, "Title"] = title_container.text
+        except:
+            scraped.loc[i, "Title"] = ""
+    time.sleep(np.random.uniform(0.2, 1))
+    if cat == "Medical" and is_us:
+        ngot += 1
 
-# location (TODO strip out organizer)
-print(org_name.findChildren("div", {"class": "m-person-info-content"})[0].text)
+stopsc = time.time()
+print(stopsc - startsc)
+scraped
 
-# def scrape_url(row_index):
-#     single_row = mydf.iloc[row_index]
-#     url = single_row["Url"]
-#     category = single_row["Category"]
-#     position = single_row["Position"]
-    
-#     page = requests.get(url)
-         
-#     soup = BeautifulSoup(page.text, 'lxml')
-#     #contains amount raised - goal amount - # of donators - length of fundraising
-#     try:
-#         container = soup.find_all("div",{"class":"layer-white hide-for-large mb10"})
-#         info_string = container[0].text
-#         info_string = info_string.splitlines()
-#         info_string = list(filter(None, info_string))
-        
-#         amount_raised = int(info_string[0][1:].replace(',',''))
-        
-#         goal = re.findall('\$(.*?) goal', info_string[1])[0]
-        
-#         NumDonators = re.findall('by (.*?) people', info_string[2])[0]
-        
-#         timeFundraised = re.findall("in (.*)$", info_string[2])[0]
-#     except:
-#         amount_raised = np.nan
-#         goal = np.nan
-#         NumDonators = np.nan
-#         timeFundraised = np.nan
-        
-    
-#     title_container = soup.find_all("h1",{"class":"campaign-title"})#<h1 class="campaign-title">Help Rick Muchow Beat Cancer</h1>
-    
-#     try:
-#         title = title_container[0].text
-#     except:
-#         title = np.nan
-    
-#     text_container =  soup.find('meta', attrs={'name': 'description'})
-    
-#     try:
-#         all_text = text_container['content']
-#     except:
-#         all_text = np.nan
-    
-#     try:
-#         FB_shares_container = soup.find_all("strong", {"class":"js-share-count-text"})
-#         FB_shares = FB_shares_container[0].text.splitlines()
-#         FB_shares = FB_shares[1].replace(" ", "").replace("\xa0", "")
-#     except:
-#         FB_shares = np.nan
-        
-#     try:
-#         hearts_container = soup.find_all("div", {"class":"campaign-sp campaign-sp--heart fave-num"})
-#         hearts = hearts_container[0].text
-#     except:
-#         hearts = np.nan
-    
-#     try:
-#         location_container = soup.find_all("div", {"class":"pills-contain"})
-#         location = location_container[0].text.splitlines()[-1]
-#         location = location.replace('\xa0', '').strip()
-#     except:
-#         location = np.nan
-        
-#     temp_row = np.array([[url, category, position, title, location, amount_raised, goal, NumDonators, timeFundraised, FB_shares, hearts, all_text]])
-#     temp_df = pd.DataFrame(temp_row, columns = headers)
-    
-#     return(temp_df)
-
-
-# def scrape_all_urls(file = 'GFM_data.csv', start = 0, end = len(mydf)):
-#     for i in range(start, 1):
-#         try:
-#             temp_df = scrape_url(i)
-#             temp_df.to_csv(file, mode = 'a',sep = '\t', header = False)
-#             print("Scraping url %s" %(i+1))
-#         except:
-#             sleep(5)
-#             temp_df = scrape_url(i)
-#             temp_df.to_csv(file, mode = 'a',sep = '\t', header = False)
-#             print("Scraping url %s" %(i+1))
-            
-        
-# scrape_all_urls()
+output = scraped.query('Category == "Medical" & IsUSA').drop(columns='Full_Scrape')
+output.to_csv("scraped_082522.csv", sep=",")

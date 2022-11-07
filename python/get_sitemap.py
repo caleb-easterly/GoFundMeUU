@@ -39,9 +39,10 @@ for cuz in clean_url_zipped:
         raise("bad request. code: " + r.status_code)
     r_io = io.BytesIO(r.content)
 
-    # read and write - TODO will operate in the same loop
+    # read and write - TODO will operate and dump URLs in the same loop
     with gzip.open(r_io, "r") as f:
         content = f.read()
         newfile = os.path.realpath(PROJECT_PATH + "/data/xmls/" + str.removeprefix(str.removesuffix(cuz, ".gz"), "https://www.gofundme.com/sitemaps/www/"))
         with open(newfile, "wb") as f:
             f.write(content)
+

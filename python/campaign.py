@@ -33,6 +33,7 @@ class campaign:
         self.scrape_campaign_title()
         self.scrape_campaign_status()
         self.scrape_campaign_desc()
+        self.scrape_campaign_desc_lang()
         self.scrape_donation_amounts()
         self.scrape_date_created()
         self.scrape_location()
@@ -134,6 +135,44 @@ class campaign:
             self.campaign_desc = self.soup.find("div", {"class": "o-campaign-description"}).text
         except:
             self.campaign_desc = ""
+    # campaign language
+    def scrape_campaign_desc_lang(self):
+        if self.campaign_desc != "":
+            try:
+                # previously used detect_langs and assessed prob of english
+                # but didn't work that well for campaigns that had both english and non-english words
+                # new solution is to split in half, since this is a common pattern
+                length_half_desc = floor(len(self.campaign_desc)/2)
+                first_half = self.campaign_desc[0:length_half_desc]
+                second_half = self.campaign_desc[length_half_desc:]
+                first_lang = detect(first_half)
+                second_lang = detect(second_half)
+                # langs = detect_langs(str(self.campaign_desc))
+                # nlangs = len(langs)
+                self.lang1 = first_lang
+                self.lang2 = second_lang
+                self.in_english = first_lang == "en" or second_lang == "en"
+
+                # if nlangs >= 2:
+                #     self.lang2 = langs[1].lang
+                #     self.lang2prob = langs[1].prob
+                # else:
+                #     self.lang2 = ""
+                #     self.lang2prob = ""
+                # if nlangs >= 3:
+                #     self.lang3 = langs[2].lang
+                #     self.lang3prob = langs[2].prob
+                # else:
+                #     self.lang3 = ""
+                #     self.lang3prob = ""
+            except:
+                self.lang1 = ""
+                self.lang2 = ""
+                self.in_english = ""
+        else:
+            self.lang1 = ""
+            self.lang2 = ""
+            self.in_english = ""
     # campaign title
     def scrape_campaign_title(self):
         try: 

@@ -5,6 +5,10 @@ import time
 import requests
 import re
 import unicodedata
+from langdetect import detect_langs, detect
+from math import floor
+
+# TODO: detectorfactory in main file
 
 class campaign:
     """
@@ -14,7 +18,7 @@ class campaign:
         - a combination of BeautifulSoup and regex is used to extract specific features
         - data is put into object attributes
         - if extraction fails, attributes are created and filled with missing (empty strings, or '') 
-    Features:
+    Features being extracted:
         - campaign title
         - campaign status (accepting new donations vs. not)
         - campaign description
@@ -23,8 +27,9 @@ class campaign:
         - campaign description
         - number of donors
         - date created
-    Features to do:
         - campaign tag (medical vs. emergency, etc.)
+    Features to do:
+        - ad-hoc in US or not
     """
     def __init__(self, url):
         self.url = url
@@ -87,7 +92,7 @@ class campaign:
             amount_text = unicodedata.normalize('NFKD', amounts.text)
 
             # remove money characters and the dot thing
-            amount_text = re.sub("[$£€,•]", "", amount_text)
+            amount_text = re.sub("[$£€,•\.]", "", amount_text)
 
             # remove multiple spaces
             amount_text = ' '.join(amount_text.split())
@@ -147,24 +152,9 @@ class campaign:
                 second_half = self.campaign_desc[length_half_desc:]
                 first_lang = detect(first_half)
                 second_lang = detect(second_half)
-                # langs = detect_langs(str(self.campaign_desc))
-                # nlangs = len(langs)
                 self.lang1 = first_lang
                 self.lang2 = second_lang
                 self.in_english = first_lang == "en" or second_lang == "en"
-
-                # if nlangs >= 2:
-                #     self.lang2 = langs[1].lang
-                #     self.lang2prob = langs[1].prob
-                # else:
-                #     self.lang2 = ""
-                #     self.lang2prob = ""
-                # if nlangs >= 3:
-                #     self.lang3 = langs[2].lang
-                #     self.lang3prob = langs[2].prob
-                # else:
-                #     self.lang3 = ""
-                #     self.lang3prob = ""
             except:
                 self.lang1 = ""
                 self.lang2 = ""

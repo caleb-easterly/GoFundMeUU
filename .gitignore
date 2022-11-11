@@ -7,3 +7,8 @@ data-raw/*
 *.pyc
 *.dta
 *.csv
+c3env
+c3env/*
+_pycache_
+_pycache_/*
+log.txt

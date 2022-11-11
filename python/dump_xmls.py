@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import glob
+import os
 
 # function to take the set of XML files from the GFM sitemap
 # and dump associated urls to a text file
@@ -10,7 +11,7 @@ def dump_xmls(data_dir, url_fname="urls.txt"):
     ns_loc = ns + "loc"
 
     # list of files in the xmls directory
-    xmls_path = data_dir + "/xmls/*.xml"
+    xmls_path = os.path.join(data_dir, "xmls", "") + "*.xml"
     xml_files = glob.glob(xmls_path)
 
     # make empty list of URLs to append to
@@ -25,6 +26,7 @@ def dump_xmls(data_dir, url_fname="urls.txt"):
         urls = urls + urls_tmp
 
     # write urls to text file
-    with open(data_dir + url_fname, 'w') as f:
+    url_fpath = os.path.join(data_dir, url_fname)
+    with open(url_fpath, 'w') as f:
         for u in urls:
                 f.write(f"{u}\n")

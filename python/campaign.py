@@ -5,10 +5,22 @@ import time
 import requests
 import re
 import unicodedata
-from langdetect import detect_langs, detect
+from langdetect import detect
 from math import floor
+from time import sleep
+from random import uniform
 
 # TODO: detectorfactory in main file
+
+# main function call - given a url, 
+def scrape_campaign(url):
+    # create campaign object for given url (does all scraping)
+    c = campaign(url=url)
+
+    # sleep to attempt to not overload the server
+    sleep(uniform(0.2, 0.6))
+
+    return c
 
 class campaign:
     """

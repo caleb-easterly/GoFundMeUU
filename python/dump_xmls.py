@@ -1,44 +1,30 @@
-
-import requests
-import io
-from urllib.request import urlopen
-import gzip
 import xml.etree.ElementTree as ET
-import os
-import pandas as pd
+import glob
 
+# function to take the set of XML files from the GFM sitemap
+# and dump associated urls to a text file
+def dump_xmls(data_dir, url_fname="urls.txt"):
+    # use the namespace
+    ns = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    ns_url = ns + "url"
+    ns_loc = ns + "loc"
 
-# base path for the project
-PROJECT_PATH = os.path.realpath("C:/Users/caleb/OneDrive - University of North Carolina at Chapel Hill/Documents/Projects/Cancer care crowdfunding/GoFundMeUU")
+    # list of files in the xmls directory
+    xmls_path = data_dir + "/xmls/*.xml"
+    xml_files = glob.glob(xmls_path)
 
-# use the namespace
-ns = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
-ns_url = ns + "url"
-ns_loc = ns + "loc"
+    # make empty list of URLs to append to
+    urls = list()
 
-urls = list()
+    # parse the xml tree to get the url
+    for f in xml_files:
+        xmltree = ET.parse(f)
+        xmlroot = xmltree.getroot()
+        resources = xmlroot.findall(ns_url)
+        urls_tmp = [r.find(ns_loc).text for r in resources]
+        urls = urls + urls_tmp
 
-for i in range(1, 106):
-    xmlname = "sitemap" + str(i) + ".xml"
-    xmlpath = os.path.realpath(PROJECT_PATH + "/data/xmls/" + xmlname)
-    xmltree = ET.parse(xmlpath)
-    xmlroot = xmltree.getroot()
-    resources = xmlroot.findall(ns_url)
-    urls_tmp = [r.find(ns_loc).text for r in resources]
-    urls = urls + urls_tmp
-
-with open(PROJECT_PATH + "/data/" + "urls.txt", 'w') as f:
-    for u in urls:
-            f.write(f"{u}\n")
-
-
-# tree1 = 
-# root = tree1.getroot()
-
-# # get all second-level nodes
-# resources = root.findall(ns_url)
-# print(resources)
-
-# # list of xml.gz files, one under each sitemap node 
-
-# print(urls)
+    # write urls to text file
+    with open(data_dir + url_fname, 'w') as f:
+        for u in urls:
+                f.write(f"{u}\n")

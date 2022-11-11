@@ -1,21 +1,22 @@
-from multiprocessing import Process, Queue, Pool
-from campaign import campaign
-
-from campaign import campaign
+from multiprocessing import Pool
 import pandas as pd
 from time import sleep
 import os
 from random import uniform
 import time
+import argparse
+import pickle
+
+# project modules
+from campaign import campaign
+from get_sitemap import get_sitemap
+from dump_xmls import dump_xmls
 
 # change directory
-os.chdir("C:\\Users\\caleb\\OneDrive - University of North Carolina at Chapel Hill\\Documents\\Projects\\Cancer care crowdfunding\\GoFundMeUU")
+# os.chdir("C:\\Users\\caleb\\OneDrive - University of North Carolina at Chapel Hill\\Documents\\Projects\\Cancer care crowdfunding\\GoFundMeUU")
 
-urls_df = pd.read_csv("data/qa_1000_second_round.csv", sep=",")
-urls = urls_df['URL'].tolist()[:100]
-
-# create campaign objects
-campaigns = set()
+# urls_df = pd.read_csv("data/qa_1000_second_round.csv", sep=",")
+# urls = urls_df['URL'].tolist()[:100]
 
 def scrape_campaign(u):
     c = campaign(url=u)
@@ -23,19 +24,39 @@ def scrape_campaign(u):
     return c
 
 if __name__ == '__main__':
-    one_start = time.time()
-    with Pool(processes=1) as pool:
+    # command line management
+    parser = argparse.ArgumentParser(description='GoFundMe web scraper')
+    parser.add_argument('-d', dest='dir', default=".", help="data directory")
+    parser.add_argument('-c', dest='ncore', default=1, help='number of cores for multiprocessing')
+    parser.add_argument('-t', dest='test', action="store_true", help='testing mode')
+    parser.add_argument('-o', dest='outf', default="scraped.px")
+    args = parser.parse_args()
+    data_dir = os.path.realpath(args.dir)
+
+    # # get xmls from sitemap
+    # get_sitemap(data_dir)
+
+    # # read urls from each of the xmls and dump to a single text file
+    # dump_xmls(data_dir, url_fname="urls.txt")
+
+    # read urls from the text file
+    urlfile = os.path.join(data_dir, "urls.txt")
+    urls_df = pd.read_csv(urlfile, sep=",", encoding='latin-1', header=None, names=['URL'])
+    urls = urls_df['URL'].tolist()
+
+    if args.test:
+        urls = urls[0:100]
+
+    # do the scrape
+    ncore = int(args.ncore)
+    with Pool(processes=ncore) as pool:
         campaigns = pool.map(scrape_campaign, urls)
-    one_end = time.time()
-    t1 = (one_end - one_start)/60
+    
+    # output results
+    outf_path = os.path.join(data_dir, args.outf)
+    with open(outf_path, "wb") as f:
+        pickle.dump(campaigns, f)
 
-    four_start = time.time()
-    with Pool(processes=4) as pool:
-        campaigns = pool.map(scrape_campaign, urls)
-    four_end = time.time()
-    t4 = (four_end - four_start)/60
-
-    print("Time 1 node: " + str(t1))
-    print("Time 4 node: " + str(t4))
-
-
+    with open(outf_path, "rb") as f:
+        a = pickle.load(f)
+        print(a)

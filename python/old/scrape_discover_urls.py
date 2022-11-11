@@ -6,7 +6,6 @@ Created on Thu Aug 23 21:48:43 2018
 @author: caleb
 """
 
-
 from bs4 import BeautifulSoup
 from time import sleep
 import numpy as np

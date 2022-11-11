@@ -1,14 +1,18 @@
 
 clear
+cd "C:\Users\caleb\OneDrive - University of North Carolina at Chapel Hill\Documents\Projects\Cancer care crowdfunding\GoFundMeUU"
 
-import delimited qa_100.csv, varnames(1) encoding("utf-8")
-save qa_100, replace
+import delimited scrape_QA/qa_100_manual.csv, varnames(1) encoding("utf-8")
+save scrape_QA/qa_100_manual, replace
 clear
 
-import delimited scraped_100qa_111.csv, varnames(1) encoding("utf-8")
+import delimited data/scraped_100qa_11.7.csv, varnames(1) encoding("utf-8")
 rename * *_scraped
 rename url_scraped url
-merge 1:1 url using qa_100, nogen 
+merge 1:1 url using scrape_QA/qa_100_manual, nogen 
+
+* status
+tab status_scraped
 
 * title
 gen title_match = title_scraped == title
@@ -17,31 +21,25 @@ tab title_match // all matching except 16, which have simple punctuation mismatc
 * amount raised
 sum raised_scraped goal_scraped
 
-replace funds_raised = ustrregexra(funds_raised, "[,\\$]", "")
-destring funds_raised, replace
-
-replace funding_goal = ustrregexra(funding_goal, "[\\$,NA]", "")
-destring funding_goal, replace
-
 gen raised_match = raised_scraped == funds_raised
-replace raised_match = . if missing(raised_scrape) | missing(funds_raised)
+tab raised_match
+
+* goal amount
+gen goal_match = goal_scraped == funding_goal if status == "active"
+tab goal_match
 
 * how many missing with scrape that shouldn't be missing?
-gen badraised = missing(raised_match) & !missing(funding_goal)
+gen badraised = missing(raised_match) & status == "active"
 tab badraised, missing
-browse if badraised
 
 * num donors
-replace num_donations = "" if num_donations == "NA"
-destring num_donations, replace
-
 gen donor_match = number_of_donors_scraped == num_donations if !missing(num_donations)
+tab donor_match
 
 * final summar
-sum donor_match title_match raised_match
+sum donor_match raised_match goal_match
+browse if !raised_match
 
-
-
-
-
-
+* 1000
+clear
+import delimited data/scraped_1000qa2_11.7.csv, varnames(1) encoding("utf-8")

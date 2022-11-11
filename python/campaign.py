@@ -28,10 +28,9 @@ class campaign:
         - number of donors
         - date created
         - campaign tag (medical vs. emergency, etc.)
-    Features to do:
-        - ad-hoc in US or not
     """
     def __init__(self, url):
+        print(url)
         self.url = url
         self.request()
         self.scrape_tag()
@@ -43,6 +42,7 @@ class campaign:
         self.scrape_date_created()
         self.scrape_location()
         self.scrape_num_donors()
+        self.soup = ""
     def request(self, maxattempt=5, firstdelay=3):
         attempts = 0
         success = 0
@@ -137,7 +137,12 @@ class campaign:
     # campaign description 
     def scrape_campaign_desc(self):
         try:
-            self.campaign_desc = self.soup.find("div", {"class": "o-campaign-description"}).text
+            campaign_desc = self.soup.find("div", {"class": "o-campaign-description"}).text
+            # remove the always-present "read more" at the end of the description
+            # (always there even though there's no more to read)
+            campaign_desc = re.sub('Read more', '', campaign_desc)
+            # remove newlines and tab characters
+            self.campaign_desc = re.sub('[\\t\\n]', '', campaign_desc)
         except:
             self.campaign_desc = ""
     # campaign language

@@ -7,7 +7,7 @@ import os
 # change directory
 os.chdir("C:\\Users\\caleb\\OneDrive - University of North Carolina at Chapel Hill\\Documents\\Projects\\Cancer care crowdfunding\\GoFundMeUU")
 
-urls = pd.read_csv("data/qa_100.csv", sep=",")
+urls = pd.read_csv("data/qa_1000_second_round.csv", sep=",")
 
 # create campaign objects
 campaigns = set()
@@ -31,6 +31,7 @@ for u in urls.URL:
     scraped.loc[i, "Number_of_Donors"] = c.num_donors
     scraped.loc[i, "Date_Created"] = c.date_created
     scraped.loc[i, "Tag"] = c.tag
+    scraped.loc[i, "Description"] = c.campaign_desc
     scraped.loc[i, "Language1"] = c.lang1
     scraped.loc[i, "Language2"] = c.lang2
     scraped.loc[i, "InEnglish"] = c.in_english
@@ -38,5 +39,4 @@ for u in urls.URL:
     i += 1
     sleep(0.2)
 
-# removing description for formatting
-scraped.to_csv("data/scraped_100qa_11.7.csv", sep=",")
+scraped.to_csv("data/scraped_1000qa2_11.7.csv", sep=",")

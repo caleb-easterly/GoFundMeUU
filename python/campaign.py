@@ -9,18 +9,16 @@ from langdetect import detect
 from math import floor
 from time import sleep
 from random import uniform
-
-# TODO: detectorfactory in main file
+import pandas as pd
 
 # main function call - given a url, 
 def scrape_campaign(url):
     # create campaign object for given url (does all scraping)
     c = campaign(url=url)
-
+    df = c.dump_campaign_to_df()
     # sleep to attempt to not overload the server
-    sleep(uniform(0.2, 0.6))
-
-    return c
+    sleep(uniform(1, 2))
+    return df
 
 class campaign:
     """
@@ -74,7 +72,10 @@ class campaign:
             encoding = r.encoding if 'charset' in r.headers.get('content-type', '').lower() else None
             self.soup = BeautifulSoup(r.content, "html.parser", from_encoding=encoding)
             self.pagetext_raw = r.text
-            self.pagetext = self.soup.get_text()
+            # store full pagetext in case it's needed later
+            pagetext = self.soup.get_text()
+            # remove newlines and tab characters
+            self.pagetext = re.sub('[\\t\\n]', '', pagetext)
         else:
             self.pagetext = ""
             self.soup = ""
@@ -206,3 +207,24 @@ class campaign:
             self.tag = str.strip(tag_raw)
         except:
             self.tag = ""
+    def dump_campaign_to_df(self):
+        headers = ["URL", "Title", "Status", "Location", "Raised", "Goal", 
+            "Number_of_Donors", "Date_Created", "Tag", "Description", "FullPageText", "Language1", "Language2", "InEnglish"]
+        camp_df = pd.DataFrame(columns=headers)
+        camp_df.loc[0, "URL"] = self.url
+        camp_df.loc[0, "Title"] = self.campaign_title
+        camp_df.loc[0, "Status"] = self.campaign_status
+        camp_df.loc[0, "Location"] = self.location_string
+        camp_df.loc[0, "State"] = self.state
+        camp_df.loc[0, "IsInUS"] = self.is_us_state_code
+        camp_df.loc[0, "Raised"] = self.raised
+        camp_df.loc[0, "Goal"] = self.goal
+        camp_df.loc[0, "Number_of_Donors"] = self.num_donors
+        camp_df.loc[0, "Date_Created"] = self.date_created
+        camp_df.loc[0, "Tag"] = self.tag
+        camp_df.loc[0, "Description"] = self.campaign_desc
+        camp_df.loc[0, "FullPageText"] = self.pagetext
+        camp_df.loc[0, "Language1"] = self.lang1
+        camp_df.loc[0, "Language2"] = self.lang2
+        camp_df.loc[0, "InEnglish"] = self.in_english
+        return camp_df

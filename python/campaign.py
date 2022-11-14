@@ -59,7 +59,10 @@ class campaign:
         while attempts < maxattempt:
             try:
                 r = requests.get(self.url)
-                success = 1
+                if r.ok == True:
+                    success = 1
+                else:
+                    raise("bad request. code: " + r.status_code)
                 break
             except:
                 print("Error with url " + str(self.url) + "on attempt #" + str(attempts))

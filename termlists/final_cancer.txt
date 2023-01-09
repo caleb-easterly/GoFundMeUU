@@ -1,0 +1,62 @@
+# List of cancer terms
+# produced by austin waters (11/18/2022) and edited by caleb easterly
+# partially derived from list of terms used by silver, et al.
+# https://github.com/silverer/cancer-crowdfunding-explorer/blob/master/data/gfm/cancer_search_terms.csv
+# any line starting with '#' is ignored
+# the terms are not case-sensitive
+# .* matches any character any number of times
+# '\' means "treat the next character literally"
+#### DESCRIPTIVE TERMS ####
+malignan.*
+#### GENERAL CANCER TERMS ####
+cancer
+carcinoma
+#### THERAPIES ####
+radiation therap.*
+radiotherap.*
+immune therap.*
+immunotherap.*
+chemo
+chemotherap.*
+mastectomy
+lumpectomy
+#### TYPES OF CANCER ####
+lukemia
+leukemia
+luekemia
+lymphoma
+melanoma
+glioblastoma
+myeloma
+myloma
+neuroblastoma
+neurblastoma
+neruoblastoma
+nuroblastoma
+nueroblastoma
+astrocytoma
+renal cell
+squamous cell
+medulloblastoma
+adenocarcinoma
+retinoblastoma
+ductal carcinoma
+neuroendocrine tumor
+histiocytosis
+carcinoid
+germ cell tumor
+desmoplastic
+wilms tumor
+wilm\'s tumor
+seminoma
+ependymoma
+thymoma
+langerhans
+ductile carcinoma
+oligodendroglioma
+clear cell
+non-hodgkins lymphoma
+non hodgkins lymphoma
+nonhodgkins lymphoma
+rhadbdomyosarcoma
+rhabdomyosaroma

@@ -1,0 +1,84 @@
+# List of LGBTQ terms
+# produced by austin waters (11/18/2022) and edited by caleb easterly
+# any line starting with '#' is ignored
+# the terms are not case-sensitive
+# .* matches any character any number of times
+# '\' means "treat the next character literally"
+#### SEXUALITY/ROMANCE ####
+ace
+aromantic
+asexual
+bisexual
+demi
+dyke
+fag
+gay
+lesbian
+lgbt.*
+pansexual
+poly
+queer
+same\-gender loving
+#### RELATIONSHIPS ####
+her girlfriend
+her wife
+his boyfriend
+his husband
+#### GENDER/SEX ####
+2 spirit
+2\-spirit
+afab
+agender
+amab
+assigned female at birth
+assigned male at birth
+bigender
+drag p.*
+drag k.*
+drag q.*
+enby
+femme
+ftm
+gender aff.*
+gender confirmation
+gender dysphoria
+gender euphoria
+gender f.*
+gender non.*
+gender queer
+gender transition
+gender\-aff.*
+genderf.*
+genderqueer
+gnc
+intersex
+masc.*
+mtf
+mx\.
+nb
+non-binary
+nonbinary
+omnigender
+qtpoc
+trans
+transgender
+transsexual
+two spirit
+two\-spirit
+#### PRONOUNS ####
+ey\/.*
+ne\/.*
+they\/.*
+ve\/.*
+xe\/.*
+zie\/.*
+#### MEDICAL PROCEDURES ####
+bottom surg.*
+phalloplasty
+sex reassignment
+top surgery
+vaginoplasty
+#### MISCELLANEOUS ####
+fruity
+sexual and gender minority
+sgm

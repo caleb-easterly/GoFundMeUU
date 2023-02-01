@@ -1,0 +1,1513 @@
+------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\caleb\OneDrive - University of North Carolina at Chapel Hill\Documents\Projects\Cancer care crowdf
+> unding\final_data\cleanup_analytic_file.log
+  log type:  text
+ opened on:  10 Jan 2023, 11:34:01
+
+. 
+. use analytic_file
+
+. gen origlocation = location
+
+. merge m:1 origlocation using geocodes
+(note: variable state was str2, now str24 to accommodate using data's values)
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                             0
+    matched                           496,044  (_merge==3)
+    -----------------------------------------
+
+. keep if _merge == 3 // all matched
+(0 observations deleted)
+
+. drop _merge
+
+. drop origlocation
+
+. 
+. tab country
+
+       Country |      Freq.     Percent        Cum.
+---------------+-----------------------------------
+     Australia |      1,574        0.32        0.32
+       Austria |          1        0.00        0.32
+        Canada |          8        0.00        0.32
+        France |         12        0.00        0.32
+         India |          3        0.00        0.32
+         Italy |          9        0.00        0.32
+   Netherlands |         30        0.01        0.33
+        Poland |          8        0.00        0.33
+United Kingdom |          3        0.00        0.33
+ United States |    494,242       99.67      100.00
+---------------+-----------------------------------
+         Total |    495,890      100.00
+
+. drop if country != "United States"
+(1,802 observations deleted)
+
+. tab country
+
+       Country |      Freq.     Percent        Cum.
+---------------+-----------------------------------
+ United States |    494,242      100.00      100.00
+---------------+-----------------------------------
+         Total |    494,242      100.00
+
+. 
+. * other cleanup
+. drop fullpagetext
+
+. rename v63 c_non_hodgkins_lymphoma_nodash
+
+. label variable c_total "total number of cancer words in title or description"
+
+. label variable c_any "any cancer words in title or description"
+
+. label variable q_total "total number of LGBTQ+ words in title or description"
+
+. label variable q_any "any LGBTQ+ words in title or description"
+
+. rename c_total csum_total
+
+. rename c_any csum_any
+
+. rename q_total qsum_total
+
+. rename q_any qsum_any
+
+. 
+. * date
+. gen date_clean = date(date_created, "MDY")
+(187 missing values generated)
+
+. format date_clean %td
+
+. gen month_created = month(date_clean)
+(187 missing values generated)
+
+. gen year_created = year(date_clean)
+(187 missing values generated)
+
+. drop date_created 
+
+. rename date_clean date_created
+
+. 
+. * geocoding
+. rename error geocoding_error
+
+. label variable county "County (geocoded from organizer's location)"
+
+. label variable country "Country (geocoded from organizer's location)"
+
+. label variable state "State (copied from organizer's location)"
+
+. label variable postalcode "Postal/zip code (geocoded from organizer's location)"
+
+. label variable geocoding_error "Geocoding failed (reason unknown)"
+
+.  
+. * replace True/False
+. foreach v of varlist c_* q_* csum_any qsum_any {
+  2.         gen `v'_b = 0
+  3.         replace `v'_b = 1 if `v' == "True"
+  4.         replace `v'_b = . if `v' == ""
+  5.         tab `v', summarize(`v'_b)
+  6.         drop `v'
+  7.         rename `v'_b `v'
+  8. }
+(5,739 real changes made)
+(7 real changes made, 7 to missing)
+
+c_malignan_ |      Summary of c_malignan___b
+          _ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     488,496
+       True |           1           0       5,739
+------------+------------------------------------
+      Total |   .01161189    .1071311     494,235
+(172,812 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of c_cancer_b
+   c_cancer |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     321,423
+       True |           1           0     172,812
+------------+------------------------------------
+      Total |   .34965553   .47686162     494,235
+(10,519 real changes made)
+(7 real changes made, 7 to missing)
+
+            |      Summary of c_carcinoma_b
+c_carcinoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     483,716
+       True |           1           0      10,519
+------------+------------------------------------
+      Total |    .0212834    .1443276     494,235
+(4,194 real changes made)
+(7 real changes made, 7 to missing)
+
+c_radiation |  Summary of c_radiation_therap___b
+  _therap__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     490,041
+       True |           1           0       4,194
+------------+------------------------------------
+      Total |   .00848584   .09172704     494,235
+(912 real changes made)
+(7 real changes made, 7 to missing)
+
+c_radiother |    Summary of c_radiotherap___b
+       ap__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,323
+       True |           1           0         912
+------------+------------------------------------
+      Total |   .00184528   .04291707     494,235
+(235 real changes made)
+(7 real changes made, 7 to missing)
+
+c_immune_th |   Summary of c_immune_therap___b
+     erap__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,000
+       True |           1           0         235
+------------+------------------------------------
+      Total |   .00047548   .02180039     494,235
+(4,993 real changes made)
+(7 real changes made, 7 to missing)
+
+c_immunothe |    Summary of c_immunotherap___b
+      rap__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     489,242
+       True |           1           0       4,993
+------------+------------------------------------
+      Total |   .01010248   .10000221     494,235
+(57,083 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of c_chemo_b
+    c_chemo |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     437,152
+       True |           1           0      57,083
+------------+------------------------------------
+      Total |   .11549769   .31962193     494,235
+(59,844 real changes made)
+(7 real changes made, 7 to missing)
+
+c_chemother |    Summary of c_chemotherap___b
+       ap__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     434,391
+       True |           1           0      59,844
+------------+------------------------------------
+      Total |    .1210841   .32622531     494,235
+(9,770 real changes made)
+(7 real changes made, 7 to missing)
+
+c_mastectom |      Summary of c_mastectomy_b
+          y |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     484,465
+       True |           1           0       9,770
+------------+------------------------------------
+      Total |   .01976792   .13920198     494,235
+(1,521 real changes made)
+(7 real changes made, 7 to missing)
+
+c_lumpectom |      Summary of c_lumpectomy_b
+          y |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     492,714
+       True |           1           0       1,521
+------------+------------------------------------
+      Total |   .00307748    .0553897     494,235
+(198 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of c_lukemia_b
+  c_lukemia |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,037
+       True |           1           0         198
+------------+------------------------------------
+      Total |   .00040062   .02001148     494,235
+(18,225 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of c_leukemia_b
+ c_leukemia |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     476,010
+       True |           1           0      18,225
+------------+------------------------------------
+      Total |   .03687517   .18845547     494,235
+(218 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of c_luekemia_b
+ c_luekemia |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,017
+       True |           1           0         218
+------------+------------------------------------
+      Total |   .00044109   .02099743     494,235
+(14,141 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of c_lymphoma_b
+ c_lymphoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     480,094
+       True |           1           0      14,141
+------------+------------------------------------
+      Total |    .0286119   .16671326     494,235
+(3,271 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of c_melanoma_b
+ c_melanoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     490,964
+       True |           1           0       3,271
+------------+------------------------------------
+      Total |   .00661831   .08108342     494,235
+(3,685 real changes made)
+(7 real changes made, 7 to missing)
+
+c_glioblast |     Summary of c_glioblastoma_b
+        oma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     490,550
+       True |           1           0       3,685
+------------+------------------------------------
+      Total |   .00745597   .08602552     494,235
+(2,752 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of c_myeloma_b
+  c_myeloma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     491,483
+       True |           1           0       2,752
+------------+------------------------------------
+      Total |    .0055682   .07441242     494,235
+(38 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of c_myloma_b
+   c_myloma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,197
+       True |           1           0          38
+------------+------------------------------------
+      Total |   .00007689   .00876817     494,235
+(1,470 real changes made)
+(7 real changes made, 7 to missing)
+
+c_neuroblas |    Summary of c_neuroblastoma_b
+       toma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     492,765
+       True |           1           0       1,470
+------------+------------------------------------
+      Total |   .00297429   .05445597     494,235
+(5 real changes made)
+(7 real changes made, 7 to missing)
+
+c_neurblast |     Summary of c_neurblastoma_b
+        oma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,230
+       True |           1           0           5
+------------+------------------------------------
+      Total |   .00001012   .00318065     494,235
+(2 real changes made)
+(7 real changes made, 7 to missing)
+
+c_neruoblas |    Summary of c_neruoblastoma_b
+       toma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,233
+       True |           1           0           2
+------------+------------------------------------
+      Total |   4.047e-06   .00201163     494,235
+(0 real changes made)
+(7 real changes made, 7 to missing)
+
+c_nuroblast |     Summary of c_nuroblastoma_b
+        oma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,235
+------------+------------------------------------
+      Total |           0           0     494,235
+(24 real changes made)
+(7 real changes made, 7 to missing)
+
+c_nueroblas |    Summary of c_nueroblastoma_b
+       toma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,211
+       True |           1           0          24
+------------+------------------------------------
+      Total |   .00004856   .00696833     494,235
+(1,180 real changes made)
+(7 real changes made, 7 to missing)
+
+c_astrocyto |     Summary of c_astrocytoma_b
+         ma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,055
+       True |           1           0       1,180
+------------+------------------------------------
+      Total |   .00238753   .04880402     494,235
+(814 real changes made)
+(7 real changes made, 7 to missing)
+
+c_renal_cel |      Summary of c_renal_cell_b
+          l |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,421
+       True |           1           0         814
+------------+------------------------------------
+      Total |   .00164699   .04054973     494,235
+(2,150 real changes made)
+(7 real changes made, 7 to missing)
+
+c_squamous_ |    Summary of c_squamous_cell_b
+       cell |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     492,085
+       True |           1           0       2,150
+------------+------------------------------------
+      Total |   .00435016   .06581217     494,235
+(593 real changes made)
+(7 real changes made, 7 to missing)
+
+c_medullobl |   Summary of c_medulloblastoma_b
+     astoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,642
+       True |           1           0         593
+------------+------------------------------------
+      Total |   .00119983   .03461787     494,235
+(2,450 real changes made)
+(7 real changes made, 7 to missing)
+
+c_adenocarc |    Summary of c_adenocarcinoma_b
+      inoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     491,785
+       True |           1           0       2,450
+------------+------------------------------------
+      Total |   .00495716   .07023242     494,235
+(411 real changes made)
+(7 real changes made, 7 to missing)
+
+c_retinobla |    Summary of c_retinoblastoma_b
+      stoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,824
+       True |           1           0         411
+------------+------------------------------------
+      Total |   .00083159   .02882531     494,235
+(3,188 real changes made)
+(7 real changes made, 7 to missing)
+
+c_ductal_ca |   Summary of c_ductal_carcinoma_b
+    rcinoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     491,047
+       True |           1           0       3,188
+------------+------------------------------------
+      Total |   .00645037   .08005485     494,235
+(189 real changes made)
+(7 real changes made, 7 to missing)
+
+c_neuroendo | Summary of c_neuroendocrine_tumor_b
+crine_tumor |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,046
+       True |           1           0         189
+------------+------------------------------------
+      Total |   .00038241   .01955157     494,235
+(202 real changes made)
+(7 real changes made, 7 to missing)
+
+c_histiocyt |    Summary of c_histiocytosis_b
+       osis |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,033
+       True |           1           0         202
+------------+------------------------------------
+      Total |   .00040871   .02021253     494,235
+(322 real changes made)
+(7 real changes made, 7 to missing)
+
+            |      Summary of c_carcinoid_b
+c_carcinoid |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,913
+       True |           1           0         322
+------------+------------------------------------
+      Total |   .00065151   .02551644     494,235
+(187 real changes made)
+(7 real changes made, 7 to missing)
+
+c_germ_cell |   Summary of c_germ_cell_tumor_b
+     _tumor |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,048
+       True |           1           0         187
+------------+------------------------------------
+      Total |   .00037836   .01944788     494,235
+(132 real changes made)
+(7 real changes made, 7 to missing)
+
+c_desmoplas |     Summary of c_desmoplastic_b
+        tic |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,103
+       True |           1           0         132
+------------+------------------------------------
+      Total |   .00026708    .0163404     494,235
+(401 real changes made)
+(7 real changes made, 7 to missing)
+
+c_wilms_tum |     Summary of c_wilms_tumor_b
+         or |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,834
+       True |           1           0         401
+------------+------------------------------------
+      Total |   .00081135   .02847276     494,235
+(74 real changes made)
+(7 real changes made, 7 to missing)
+
+c_wilm__s_t |    Summary of c_wilm__s_tumor_b
+       umor |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,161
+       True |           1           0          74
+------------+------------------------------------
+      Total |   .00014973   .01223537     494,235
+(195 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of c_seminoma_b
+ c_seminoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,040
+       True |           1           0         195
+------------+------------------------------------
+      Total |   .00039455   .01985936     494,235
+(365 real changes made)
+(7 real changes made, 7 to missing)
+
+c_ependymom |      Summary of c_ependymoma_b
+          a |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,870
+       True |           1           0         365
+------------+------------------------------------
+      Total |   .00073852   .02716562     494,235
+(110 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of c_thymoma_b
+  c_thymoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,125
+       True |           1           0         110
+------------+------------------------------------
+      Total |   .00022257   .01491701     494,235
+(182 real changes made)
+(7 real changes made, 7 to missing)
+
+c_langerhan |      Summary of c_langerhans_b
+          s |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,053
+       True |           1           0         182
+------------+------------------------------------
+      Total |   .00036825   .01918622     494,235
+(160 real changes made)
+(7 real changes made, 7 to missing)
+
+c_ductile_c |  Summary of c_ductile_carcinoma_b
+   arcinoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,075
+       True |           1           0         160
+------------+------------------------------------
+      Total |   .00032373   .01798968     494,235
+(248 real changes made)
+(7 real changes made, 7 to missing)
+
+c_oligodend |  Summary of c_oligodendroglioma_b
+   roglioma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,987
+       True |           1           0         248
+------------+------------------------------------
+      Total |   .00050179   .02239497     494,235
+(320 real changes made)
+(7 real changes made, 7 to missing)
+
+c_clear_cel |      Summary of c_clear_cell_b
+          l |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,915
+       True |           1           0         320
+------------+------------------------------------
+      Total |   .00064747   .02543713     494,235
+(821 real changes made)
+(7 real changes made, 7 to missing)
+
+c_non_hodgk |             Summary of
+ins_lymphom |      c_non_hodgkins_lymphoma_b
+          a |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,414
+       True |           1           0         821
+------------+------------------------------------
+      Total |   .00166115   .04072342     494,235
+(261 real changes made)
+(7 real changes made, 7 to missing)
+
+c_non_hodgk |             Summary of
+ins_lymphom |  c_non_hodgkins_lymphoma_nodash_b
+          a |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,974
+       True |           1           0         261
+------------+------------------------------------
+      Total |   .00052809   .02297414     494,235
+(16 real changes made)
+(7 real changes made, 7 to missing)
+
+c_nonhodgki | Summary of c_nonhodgkins_lymphoma_b
+ns_lymphoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,219
+       True |           1           0          16
+------------+------------------------------------
+      Total |   .00003237   .00568966     494,235
+(0 real changes made)
+(7 real changes made, 7 to missing)
+
+c_rhadbdomy |  Summary of c_rhadbdomyosarcoma_b
+   osarcoma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,235
+------------+------------------------------------
+      Total |           0           0     494,235
+(0 real changes made)
+(7 real changes made, 7 to missing)
+
+c_rhabdomyo |   Summary of c_rhabdomyosaroma_b
+     saroma |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,235
+------------+------------------------------------
+      Total |           0           0     494,235
+(291 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_ace_b
+      q_ace |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,944
+       True |           1           0         291
+------------+------------------------------------
+      Total |   .00058879   .02425785     494,235
+(1 real change made)
+(7 real changes made, 7 to missing)
+
+            |      Summary of q_aromantic_b
+q_aromantic |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,234
+       True |           1           0           1
+------------+------------------------------------
+      Total |   2.023e-06   .00142244     494,235
+(7 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_asexual_b
+  q_asexual |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,228
+       True |           1           0           7
+------------+------------------------------------
+      Total |   .00001416   .00376339     494,235
+(23 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_bisexual_b
+ q_bisexual |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,212
+       True |           1           0          23
+------------+------------------------------------
+      Total |   .00004654   .00682162     494,235
+(71 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_demi_b
+     q_demi |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,164
+       True |           1           0          71
+------------+------------------------------------
+      Total |   .00014366   .01198482     494,235
+(35 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_dyke_b
+     q_dyke |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,200
+       True |           1           0          35
+------------+------------------------------------
+      Total |   .00007082   .00841497     494,235
+(4 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_fag_b
+      q_fag |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,231
+       True |           1           0           4
+------------+------------------------------------
+      Total |   8.093e-06   .00284487     494,235
+(314 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_gay_b
+      q_gay |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,921
+       True |           1           0         314
+------------+------------------------------------
+      Total |   .00063533   .02519768     494,235
+(127 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_lesbian_b
+  q_lesbian |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,108
+       True |           1           0         127
+------------+------------------------------------
+      Total |   .00025696   .01602802     494,235
+(572 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_lgbt___b
+   q_lgbt__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,663
+       True |           1           0         572
+------------+------------------------------------
+      Total |   .00115734    .0340001     494,235
+(3 real changes made)
+(7 real changes made, 7 to missing)
+
+            |      Summary of q_pansexual_b
+q_pansexual |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,232
+       True |           1           0           3
+------------+------------------------------------
+      Total |   6.070e-06   .00246373     494,235
+(153 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_poly_b
+     q_poly |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,082
+       True |           1           0         153
+------------+------------------------------------
+      Total |   .00030957   .01759188     494,235
+(789 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_queer_b
+    q_queer |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,446
+       True |           1           0         789
+------------+------------------------------------
+      Total |   .00159641   .03992319     494,235
+(0 real changes made)
+(7 real changes made, 7 to missing)
+
+q_same__gen | Summary of q_same__gender_loving_b
+ der_loving |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,235
+------------+------------------------------------
+      Total |           0           0     494,235
+(35 real changes made)
+(7 real changes made, 7 to missing)
+
+q_her_girlf |    Summary of q_her_girlfriend_b
+      riend |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,200
+       True |           1           0          35
+------------+------------------------------------
+      Total |   .00007082   .00841497     494,235
+(314 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_her_wife_b
+ q_her_wife |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,921
+       True |           1           0         314
+------------+------------------------------------
+      Total |   .00063533   .02519768     494,235
+(10 real changes made)
+(7 real changes made, 7 to missing)
+
+q_his_boyfr |    Summary of q_his_boyfriend_b
+       iend |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,225
+       True |           1           0          10
+------------+------------------------------------
+      Total |   .00002023    .0044981     494,235
+(155 real changes made)
+(7 real changes made, 7 to missing)
+
+q_his_husba |     Summary of q_his_husband_b
+         nd |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,080
+       True |           1           0         155
+------------+------------------------------------
+      Total |   .00031362   .01770645     494,235
+(0 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_2_spirit_b
+ q_2_spirit |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,235
+------------+------------------------------------
+      Total |           0           0     494,235
+(0 real changes made)
+(7 real changes made, 7 to missing)
+
+            |      Summary of q_2__spirit_b
+q_2__spirit |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,235
+------------+------------------------------------
+      Total |           0           0     494,235
+(32 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_afab_b
+     q_afab |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,203
+       True |           1           0          32
+------------+------------------------------------
+      Total |   .00006475   .00804627     494,235
+(27 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_agender_b
+  q_agender |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,208
+       True |           1           0          27
+------------+------------------------------------
+      Total |   .00005463   .00739101     494,235
+(7 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_amab_b
+     q_amab |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,228
+       True |           1           0           7
+------------+------------------------------------
+      Total |   .00001416   .00376339     494,235
+(43 real changes made)
+(7 real changes made, 7 to missing)
+
+q_assigned_ |             Summary of
+female_at_b |    q_assigned_female_at_birth_b
+       irth |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,192
+       True |           1           0          43
+------------+------------------------------------
+      Total |     .000087   .00932715     494,235
+(23 real changes made)
+(7 real changes made, 7 to missing)
+
+q_assigned_ |             Summary of
+male_at_bir |     q_assigned_male_at_birth_b
+         th |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,212
+       True |           1           0          23
+------------+------------------------------------
+      Total |   .00004654   .00682162     494,235
+(1 real change made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_bigender_b
+ q_bigender |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,234
+       True |           1           0           1
+------------+------------------------------------
+      Total |   2.023e-06   .00142244     494,235
+(13 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_drag_p___b
+ q_drag_p__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,222
+       True |           1           0          13
+------------+------------------------------------
+      Total |    .0000263   .00512861     494,235
+(7 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_drag_k___b
+ q_drag_k__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,228
+       True |           1           0           7
+------------+------------------------------------
+      Total |   .00001416   .00376339     494,235
+(24 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_drag_q___b
+ q_drag_q__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,211
+       True |           1           0          24
+------------+------------------------------------
+      Total |   .00004856   .00696833     494,235
+(16 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_enby_b
+     q_enby |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,219
+       True |           1           0          16
+------------+------------------------------------
+      Total |   .00003237   .00568966     494,235
+(123 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_femme_b
+    q_femme |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,112
+       True |           1           0         123
+------------+------------------------------------
+      Total |   .00024887   .01577365     494,235
+(297 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_ftm_b
+      q_ftm |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,938
+       True |           1           0         297
+------------+------------------------------------
+      Total |   .00060093   .02450651     494,235
+(1,015 real changes made)
+(7 real changes made, 7 to missing)
+
+q_gender_af |     Summary of q_gender_aff___b
+        f__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,220
+       True |           1           0       1,015
+------------+------------------------------------
+      Total |   .00205368   .04527102     494,235
+(272 real changes made)
+(7 real changes made, 7 to missing)
+
+q_gender_co | Summary of q_gender_confirmation_b
+ nfirmation |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,963
+       True |           1           0         272
+------------+------------------------------------
+      Total |   .00055035   .02345301     494,235
+(802 real changes made)
+(7 real changes made, 7 to missing)
+
+q_gender_dy |   Summary of q_gender_dysphoria_b
+    sphoria |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,433
+       True |           1           0         802
+------------+------------------------------------
+      Total |   .00162271   .04025022     494,235
+(55 real changes made)
+(7 real changes made, 7 to missing)
+
+q_gender_eu |   Summary of q_gender_euphoria_b
+     phoria |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,180
+       True |           1           0          55
+------------+------------------------------------
+      Total |   .00011128    .0105485     494,235
+(31 real changes made)
+(7 real changes made, 7 to missing)
+
+q_gender_f_ |      Summary of q_gender_f___b
+          _ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,204
+       True |           1           0          31
+------------+------------------------------------
+      Total |   .00006272   .00791956     494,235
+(61 real changes made)
+(7 real changes made, 7 to missing)
+
+q_gender_no |     Summary of q_gender_non___b
+        n__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,174
+       True |           1           0          61
+------------+------------------------------------
+      Total |   .00012342   .01110892     494,235
+(5 real changes made)
+(7 real changes made, 7 to missing)
+
+q_gender_qu |     Summary of q_gender_queer_b
+        eer |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,230
+       True |           1           0           5
+------------+------------------------------------
+      Total |   .00001012   .00318065     494,235
+(75 real changes made)
+(7 real changes made, 7 to missing)
+
+q_gender_tr |  Summary of q_gender_transition_b
+   ansition |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,160
+       True |           1           0          75
+------------+------------------------------------
+      Total |   .00015175   .01231775     494,235
+(564 real changes made)
+(7 real changes made, 7 to missing)
+
+q_gender__a |    Summary of q_gender__aff___b
+       ff__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,671
+       True |           1           0         564
+------------+------------------------------------
+      Total |   .00114116   .03376178     494,235
+(23 real changes made)
+(7 real changes made, 7 to missing)
+
+            |      Summary of q_genderf___b
+q_genderf__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,212
+       True |           1           0          23
+------------+------------------------------------
+      Total |   .00004654   .00682162     494,235
+(60 real changes made)
+(7 real changes made, 7 to missing)
+
+q_genderque |     Summary of q_genderqueer_b
+         er |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,175
+       True |           1           0          60
+------------+------------------------------------
+      Total |    .0001214    .0110175     494,235
+(27 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_gnc_b
+      q_gnc |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,208
+       True |           1           0          27
+------------+------------------------------------
+      Total |   .00005463   .00739101     494,235
+(37 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_intersex_b
+ q_intersex |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,198
+       True |           1           0          37
+------------+------------------------------------
+      Total |   .00007486   .00865204     494,235
+(821 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_masc___b
+   q_masc__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,414
+       True |           1           0         821
+------------+------------------------------------
+      Total |   .00166115   .04072342     494,235
+(55 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_mtf_b
+      q_mtf |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,180
+       True |           1           0          55
+------------+------------------------------------
+      Total |   .00011128    .0105485     494,235
+(5 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_mx___b
+     q_mx__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,230
+       True |           1           0           5
+------------+------------------------------------
+      Total |   .00001012   .00318065     494,235
+(52 real changes made)
+(7 real changes made, 7 to missing)
+
+            |          Summary of q_nb_b
+       q_nb |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,183
+       True |           1           0          52
+------------+------------------------------------
+      Total |   .00010521   .01025681     494,235
+(668 real changes made)
+(7 real changes made, 7 to missing)
+
+q_non_binar |      Summary of q_non_binary_b
+          y |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,567
+       True |           1           0         668
+------------+------------------------------------
+      Total |   .00135158   .03673908     494,235
+(398 real changes made)
+(7 real changes made, 7 to missing)
+
+            |      Summary of q_nonbinary_b
+q_nonbinary |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,837
+       True |           1           0         398
+------------+------------------------------------
+      Total |   .00080528   .02836614     494,235
+(0 real changes made)
+(7 real changes made, 7 to missing)
+
+q_omnigende |      Summary of q_omnigender_b
+          r |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,235
+------------+------------------------------------
+      Total |           0           0     494,235
+(26 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_qtpoc_b
+    q_qtpoc |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,209
+       True |           1           0          26
+------------+------------------------------------
+      Total |   .00005261   .00725285     494,235
+(3,300 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_trans_b
+    q_trans |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     490,935
+       True |           1           0       3,300
+------------+------------------------------------
+      Total |   .00667699   .08143965     494,235
+(1,599 real changes made)
+(7 real changes made, 7 to missing)
+
+q_transgend |     Summary of q_transgender_b
+         er |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     492,636
+       True |           1           0       1,599
+------------+------------------------------------
+      Total |    .0032353    .0567877     494,235
+(9 real changes made)
+(7 real changes made, 7 to missing)
+
+q_transsexu |     Summary of q_transsexual_b
+         al |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,226
+       True |           1           0           9
+------------+------------------------------------
+      Total |   .00001821   .00426728     494,235
+(15 real changes made)
+(7 real changes made, 7 to missing)
+
+q_two_spiri |      Summary of q_two_spirit_b
+          t |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,220
+       True |           1           0          15
+------------+------------------------------------
+      Total |   .00003035     .005509     494,235
+(19 real changes made)
+(7 real changes made, 7 to missing)
+
+q_two__spir |     Summary of q_two__spirit_b
+         it |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,216
+       True |           1           0          19
+------------+------------------------------------
+      Total |   .00003844   .00620015     494,235
+(1 real change made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_ey_____b
+   q_ey____ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,234
+       True |           1           0           1
+------------+------------------------------------
+      Total |   2.023e-06   .00142244     494,235
+(1 real change made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_ne_____b
+   q_ne____ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,234
+       True |           1           0           1
+------------+------------------------------------
+      Total |   2.023e-06   .00142244     494,235
+(486 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_they_____b
+ q_they____ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,749
+       True |           1           0         486
+------------+------------------------------------
+      Total |   .00098334   .03134283     494,235
+(1 real change made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_ve_____b
+   q_ve____ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,234
+       True |           1           0           1
+------------+------------------------------------
+      Total |   2.023e-06   .00142244     494,235
+(4 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_xe_____b
+   q_xe____ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,231
+       True |           1           0           4
+------------+------------------------------------
+      Total |   8.093e-06   .00284487     494,235
+(0 real changes made)
+(7 real changes made, 7 to missing)
+
+            |       Summary of q_zie_____b
+  q_zie____ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,235
+------------+------------------------------------
+      Total |           0           0     494,235
+(302 real changes made)
+(7 real changes made, 7 to missing)
+
+q_bottom_su |    Summary of q_bottom_surg___b
+       rg__ |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     493,933
+       True |           1           0         302
+------------+------------------------------------
+      Total |   .00061105    .0247118     494,235
+(43 real changes made)
+(7 real changes made, 7 to missing)
+
+q_phallopla |     Summary of q_phalloplasty_b
+        sty |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,192
+       True |           1           0          43
+------------+------------------------------------
+      Total |     .000087   .00932715     494,235
+(35 real changes made)
+(7 real changes made, 7 to missing)
+
+q_sex_reass |   Summary of q_sex_reassignment_b
+    ignment |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,200
+       True |           1           0          35
+------------+------------------------------------
+      Total |   .00007082   .00841497     494,235
+(4,044 real changes made)
+(7 real changes made, 7 to missing)
+
+q_top_surge |     Summary of q_top_surgery_b
+         ry |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     490,191
+       True |           1           0       4,044
+------------+------------------------------------
+      Total |   .00818234   .09008556     494,235
+(85 real changes made)
+(7 real changes made, 7 to missing)
+
+q_vaginopla |     Summary of q_vaginoplasty_b
+        sty |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,150
+       True |           1           0          85
+------------+------------------------------------
+      Total |   .00017198   .01311311     494,235
+(9 real changes made)
+(7 real changes made, 7 to missing)
+
+            |        Summary of q_fruity_b
+   q_fruity |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,226
+       True |           1           0           9
+------------+------------------------------------
+      Total |   .00001821   .00426728     494,235
+(0 real changes made)
+(7 real changes made, 7 to missing)
+
+q_sexual_an |             Summary of
+d_gender_mi |   q_sexual_and_gender_minority_b
+     nority |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,235
+------------+------------------------------------
+      Total |           0           0     494,235
+(7 real changes made)
+(7 real changes made, 7 to missing)
+
+            |         Summary of q_sgm_b
+      q_sgm |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     494,228
+       True |           1           0           7
+------------+------------------------------------
+      Total |   .00001416   .00376339     494,235
+(196,038 real changes made)
+(0 real changes made)
+
+ any cancer |
+   words in |
+   title or |        Summary of csum_any_b
+description |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     298,204
+       True |           1           0     196,038
+------------+------------------------------------
+      Total |   .39664375   .48920136     494,242
+(8,660 real changes made)
+(0 real changes made)
+
+ any LGBTQ+ |
+   words in |
+   title or |        Summary of qsum_any_b
+description |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+      False |           0           0     485,582
+       True |           1           0       8,660
+------------+------------------------------------
+      Total |   .01752178   .13120519     494,242
+
+. 
+. order url date_created month_created year_created ///
+>         title status location county state country postalcode geocoding_error raised ///
+>         goal number_of_donors tag description language1 language2 inenglish isinus
+
+. 
+. compress
+  variable date_created was float now int
+  variable month_created was float now byte
+  variable year_created was float now int
+  variable c_malignan__ was float now byte
+  variable c_cancer was float now byte
+  variable c_carcinoma was float now byte
+  variable c_radiation_therap__ was float now byte
+  variable c_radiotherap__ was float now byte
+  variable c_immune_therap__ was float now byte
+  variable c_immunotherap__ was float now byte
+  variable c_chemo was float now byte
+  variable c_chemotherap__ was float now byte
+  variable c_mastectomy was float now byte
+  variable c_lumpectomy was float now byte
+  variable c_lukemia was float now byte
+  variable c_leukemia was float now byte
+  variable c_luekemia was float now byte
+  variable c_lymphoma was float now byte
+  variable c_melanoma was float now byte
+  variable c_glioblastoma was float now byte
+  variable c_myeloma was float now byte
+  variable c_myloma was float now byte
+  variable c_neuroblastoma was float now byte
+  variable c_neurblastoma was float now byte
+  variable c_neruoblastoma was float now byte
+  variable c_nuroblastoma was float now byte
+  variable c_nueroblastoma was float now byte
+  variable c_astrocytoma was float now byte
+  variable c_renal_cell was float now byte
+  variable c_squamous_cell was float now byte
+  variable c_medulloblastoma was float now byte
+  variable c_adenocarcinoma was float now byte
+  variable c_retinoblastoma was float now byte
+  variable c_ductal_carcinoma was float now byte
+  variable c_neuroendocrine_tumor was float now byte
+  variable c_histiocytosis was float now byte
+  variable c_carcinoid was float now byte
+  variable c_germ_cell_tumor was float now byte
+  variable c_desmoplastic was float now byte
+  variable c_wilms_tumor was float now byte
+  variable c_wilm__s_tumor was float now byte
+  variable c_seminoma was float now byte
+  variable c_ependymoma was float now byte
+  variable c_thymoma was float now byte
+  variable c_langerhans was float now byte
+  variable c_ductile_carcinoma was float now byte
+  variable c_oligodendroglioma was float now byte
+  variable c_clear_cell was float now byte
+  variable c_non_hodgkins_lymphoma was float now byte
+  variable c_non_hodgkins_lymphoma_nodash was float now byte
+  variable c_nonhodgkins_lymphoma was float now byte
+  variable c_rhadbdomyosarcoma was float now byte
+  variable c_rhabdomyosaroma was float now byte
+  variable q_ace was float now byte
+  variable q_aromantic was float now byte
+  variable q_asexual was float now byte
+  variable q_bisexual was float now byte
+  variable q_demi was float now byte
+  variable q_dyke was float now byte
+  variable q_fag was float now byte
+  variable q_gay was float now byte
+  variable q_lesbian was float now byte
+  variable q_lgbt__ was float now byte
+  variable q_pansexual was float now byte
+  variable q_poly was float now byte
+  variable q_queer was float now byte
+  variable q_same__gender_loving was float now byte
+  variable q_her_girlfriend was float now byte
+  variable q_her_wife was float now byte
+  variable q_his_boyfriend was float now byte
+  variable q_his_husband was float now byte
+  variable q_2_spirit was float now byte
+  variable q_2__spirit was float now byte
+  variable q_afab was float now byte
+  variable q_agender was float now byte
+  variable q_amab was float now byte
+  variable q_assigned_female_at_birth was float now byte
+  variable q_assigned_male_at_birth was float now byte
+  variable q_bigender was float now byte
+  variable q_drag_p__ was float now byte
+  variable q_drag_k__ was float now byte
+  variable q_drag_q__ was float now byte
+  variable q_enby was float now byte
+  variable q_femme was float now byte
+  variable q_ftm was float now byte
+  variable q_gender_aff__ was float now byte
+  variable q_gender_confirmation was float now byte
+  variable q_gender_dysphoria was float now byte
+  variable q_gender_euphoria was float now byte
+  variable q_gender_f__ was float now byte
+  variable q_gender_non__ was float now byte
+  variable q_gender_queer was float now byte
+  variable q_gender_transition was float now byte
+  variable q_gender__aff__ was float now byte
+  variable q_genderf__ was float now byte
+  variable q_genderqueer was float now byte
+  variable q_gnc was float now byte
+  variable q_intersex was float now byte
+  variable q_masc__ was float now byte
+  variable q_mtf was float now byte
+  variable q_mx__ was float now byte
+  variable q_nb was float now byte
+  variable q_non_binary was float now byte
+  variable q_nonbinary was float now byte
+  variable q_omnigender was float now byte
+  variable q_qtpoc was float now byte
+  variable q_trans was float now byte
+  variable q_transgender was float now byte
+  variable q_transsexual was float now byte
+  variable q_two_spirit was float now byte
+  variable q_two__spirit was float now byte
+  variable q_ey____ was float now byte
+  variable q_ne____ was float now byte
+  variable q_they____ was float now byte
+  variable q_ve____ was float now byte
+  variable q_xe____ was float now byte
+  variable q_zie____ was float now byte
+  variable q_bottom_surg__ was float now byte
+  variable q_phalloplasty was float now byte
+  variable q_sex_reassignment was float now byte
+  variable q_top_surgery was float now byte
+  variable q_vaginoplasty was float now byte
+  variable q_fruity was float now byte
+  variable q_sexual_and_gender_minority was float now byte
+  variable q_sgm was float now byte
+  variable csum_any was float now byte
+  variable qsum_any was float now byte
+  variable state was str24 now str2
+  variable country was str14 now str13
+  variable postalcode was str7 now str5
+  (199,673,768 bytes saved)
+
+. save analytic_file_final_geocoded, replace
+file analytic_file_final_geocoded.dta saved
+
+. export delimited using analytic_file_final_geocoded.csv, delimiter(",") quote replace
+file analytic_file_final_geocoded.csv saved
+
+. log close
+      name:  <unnamed>
+       log:  C:\Users\caleb\OneDrive - University of North Carolina at Chapel Hill\Documents\Projects\Cancer care crowdf
+> unding\final_data\cleanup_analytic_file.log
+  log type:  text
+ closed on:  10 Jan 2023, 11:36:29
+------------------------------------------------------------------------------------------------------------------------

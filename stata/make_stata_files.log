@@ -1,0 +1,45 @@
+------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\caleb\OneDrive - University of North Carolina at Chapel Hill\Documents\Projects\Cancer care crowdf
+> unding\final_data\make_stata_files.log
+  log type:  text
+ opened on:  10 Jan 2023, 11:36:31
+
+. 
+. local files filtered_full_samp analytic_file lgbtq_med_campaigns geocodes
+
+. 
+. foreach f of local files {
+  2.         clear
+  3.         import delimited "`f'.csv", ///
+>                 encoding("utf-8") bindquote("strict") varnames(1)
+  4.         compress
+  5.         save `f'.dta, replace
+  6. }
+(16 vars, 496,044 obs)
+  description is strL now coalesced
+  fullpagetext is strL now coalesced
+  (557,173 bytes saved)
+file filtered_full_samp.dta saved
+(142 vars, 496,044 obs)
+  description is strL now coalesced
+  fullpagetext is strL now coalesced
+  (557,173 bytes saved)
+file analytic_file.dta saved
+(142 vars, 8,716 obs)
+  description is strL now coalesced
+  fullpagetext is strL now coalesced
+  (36,849 bytes saved)
+file lgbtq_med_campaigns.dta saved
+(6 vars, 19,979 obs)
+  (0 bytes saved)
+file geocodes.dta saved
+
+. 
+. log close
+      name:  <unnamed>
+       log:  C:\Users\caleb\OneDrive - University of North Carolina at Chapel Hill\Documents\Projects\Cancer care crowdf
+> unding\final_data\make_stata_files.log
+  log type:  text
+ closed on:  10 Jan 2023, 11:40:11
+------------------------------------------------------------------------------------------------------------------------
